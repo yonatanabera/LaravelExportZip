@@ -10,41 +10,42 @@ use ZipArchive;
 class HomeController extends Controller
 {
    
-
-    public function download_zip(){
-        $zip = new ZipArchive;
-        $fileName = 'myNewFile.zip';
-        if ($zip->open(public_path($fileName), ZipArchive::CREATE) === TRUE)
-        {
-            $files = File::files(public_path('temp/'));
-            foreach ($files as $key => $value) {
-                $relativeNameInZipFile = basename($value);
-                $zip->addFile($value, $relativeNameInZipFile);
-            }
-            $zip->close();
-        }
-        return response()->download(public_path($fileName));
+    public function copy(){
+        File::copyDirectory(public_path('temp/eapi/'), public_path('temp/nob/'));
+        dd("public file copied");
     }
 
 
+    
+    /**
+     * @throws RuntimeException If the file cannot be opened
+     */
     public function create()
     {
-        $filePath = 'app/course/files.zip';
+        $filePath = 'temp/files.zip';
         $zip = new \ZipArchive();
     
-        if ($zip->open($filePath, \ZipArchive::CREATE) !== true) {
+        if ($zip->open(public_path($filePath), \ZipArchive::CREATE) !== true) {
             throw new \RuntimeException('Cannot open ' . $filePath);
         }
     
-        $this->addContent($zip, realpath('app/course'));
+        $this->addContent($zip, public_path('temp'));
         $zip->close();
+        return "ZIp file created";
+
+        return response()->download(public_path($filePath));
     }
 
     
-   
+    /**
+     * This takes symlinks into account.
+     *
+     * @param ZipArchive $zip
+     * @param string     $path
+     */
     private function addContent(\ZipArchive $zip, string $path)
     {
-      
+        /** @var SplFileInfo[] $files */
         $iterator = new \RecursiveIteratorIterator(
             new \RecursiveDirectoryIterator(
                 $path,
@@ -69,4 +70,18 @@ class HomeController extends Controller
             $iterator->next();
         }
     }
+
+
+
+    public function extractFile(){
+       $zip= new ZipArchive; 
+       if($zip->open('temp/files.zip')===TRUE){
+           $zip->extractTo('Gelila');
+           $zip->close();
+           return "Completed";
+       }else{
+           return "Error";
+       }
+    }
+
 }
